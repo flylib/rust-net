@@ -1,8 +1,9 @@
-mod context;
-mod message;
-mod transport;
-mod session;
-mod event;
+pub mod context;
+pub mod message;
+pub mod transport;
+pub mod session;
+pub mod event;
+pub mod tcp;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

@@ -1,6 +1,7 @@
-use crate::message::Message;
-
 pub enum Transport {
-    Tcp,
-    Ws,
+    TCP,
+    UDP,
+    WS,
+    QUIC,
+    KCP,
 }

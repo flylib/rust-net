@@ -1,4 +1,3 @@
-
 pub struct Message {
     id: u32,
     sid: u64,
@@ -6,9 +5,9 @@ pub struct Message {
 }
 
 impl Message {
-    pub fn new(sid: u64, id: u32, body: Vec<u8>) -> Self {
+    pub fn new(sid: u64, msg_id: u32, body: Vec<u8>) -> Self {
         Self {
-            id,
+            id: msg_id,
             body,
             sid,
         }
