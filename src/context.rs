@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 use tokio::sync::mpsc::Sender;
 
 use crate::event::IEventHandler;
@@ -9,7 +9,7 @@ use crate::message::Message;
 
 pub struct Context {
     incr: AtomicU64,
-    pub(crate) event_handler: Arc<Box<dyn IEventHandler>>,
+    pub(crate) event_handler: Arc<Mutex<Box<dyn IEventHandler>>>,
     pub(crate) tx: Sender<Message>,
 }
 
@@ -19,14 +19,15 @@ impl Context {
         //global message channel
         let (tx, mut rx) = mpsc::channel(32);
 
-        let arc_handler = Arc::new(event_handler);
+        let arc_handler = Arc::new(Mutex::new(event_handler));
         let clone_handler = arc_handler.clone();
         //run
         tokio::spawn(async move {
             // 接收并打印消息
             while let Some(msg) = rx.recv().await {
                 // println!("Received: {}", msg);
-                clone_handler.on_message(msg);
+                let guard = clone_handler.lock().await;
+                guard.on_message(msg);
             }
         });
 

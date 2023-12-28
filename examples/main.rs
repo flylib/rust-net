@@ -9,9 +9,9 @@ use rust_net::tcp::Server;
 
 #[tokio::main]
 async fn main() {
-    let ctx = Context::new(Box::EventHandler::new());
+    let ctx = Context::new(Box::new(EventHandler::new()));
     let mut server = Server::new(ctx);
-    server.listen("127.0.0.1:8083").await.unwrap();
+    server.listen("127.0.0.1:8089").await.unwrap();
 }
 
 
@@ -19,9 +19,12 @@ struct EventHandler {
     sessions: DashMap<u64, Box<dyn ISession>>,
 }
 
+
 impl EventHandler {
     fn new() -> Self {
-        Self
+        Self {
+            sessions: Default::default()
+        }
     }
     pub fn add_session(&self, session: Box<dyn ISession>) {
         self.sessions.insert(session.get_id(), session);
@@ -37,6 +40,8 @@ impl EventHandler {
         self.sessions.get_mut(&id)
     }
 }
+
+unsafe impl Send for EventHandler {}
 
 impl IEventHandler for EventHandler {
     fn on_connect(&self, session: Box<dyn ISession>) {

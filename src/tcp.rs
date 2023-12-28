@@ -56,14 +56,15 @@ impl Server {
 impl Server {
     pub async fn listen(&mut self, addr: &str) -> Result<(), std::io::Error> {
         let listener = TcpListener::bind(addr).await?;
-        let arc_handler = self.ctx.event_handler.clone();
+
         println!("===server listen on {} ===", addr);
         loop {
             let (socket, remote_addr) = listener.accept().await?;
             let sid = self.ctx.get_sequence();
             let (read, write) = socket.into_split();
             let session = Session::new(sid, write);
-            arc_handler.on_connect(Box::new(session));
+            let guard = self.ctx.event_handler.lock().await;
+            guard.on_connect(Box::new(session));
             println!("get the connection from {} session id={}", remote_addr, sid);
 
             let sender = self.ctx.tx.clone();
