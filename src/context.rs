@@ -9,8 +9,8 @@ use crate::message::Message;
 
 pub struct Context {
     incr: AtomicU64,
-    pub(crate) event_handler: Arc<Mutex<Box<dyn IEventHandler>>>,
-    pub(crate) tx: Sender<Message>,
+    pub event_handler: Arc<Mutex<Box<dyn IEventHandler>>>,
+    pub tx: Sender<Message>,
 }
 
 

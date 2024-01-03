@@ -28,14 +28,12 @@ impl ISession for Session {
         self.id
     }
 
-    fn send(&mut self, msg_id: u32, body: Vec<u8>) -> Result<(), Error> {
-        let _ = self.write_ch.write_all(&body);
-        Ok(())
+    async fn send(&mut self, msg_id: u32, body: Vec<u8>) -> Result<(), Error> {
+        self.write_ch.write_all(&body).await
     }
 
-    fn close(&mut self) -> Result<(), Error> {
-        let _ = self.write_ch.shutdown();
-        Ok(())
+    async fn close(&mut self) -> Result<(), Error> {
+        self.write_ch.shutdown().await
     }
 }
 
