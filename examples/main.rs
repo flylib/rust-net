@@ -5,12 +5,12 @@ use rust_net::context::Context;
 use rust_net::event::IEventHandler;
 use rust_net::message::Message;
 use rust_net::session::ISession;
-use rust_net::tcp::Server;
+use rust_net::tcp::TcpServer;
 
 #[tokio::main]
 async fn main() {
     let ctx = Context::new(Box::new(EventHandler::new()));
-    let mut server = Server::new(ctx);
+    let mut server = TcpServer::new(ctx);
     server.listen("127.0.0.1:8089").await.unwrap();
 }
 
@@ -41,7 +41,6 @@ impl EventHandler {
     }
 }
 
-unsafe impl Send for EventHandler {}
 
 impl IEventHandler for EventHandler {
     fn on_connect(&self, session: Box<dyn ISession>) {
