@@ -1,11 +1,11 @@
 use std::io::Error;
 
+use serde_json;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::TcpListener;
-use tokio::net::windows::named_pipe::PipeMode::Message;
 use tokio::sync::mpsc;
-use tokio::sync::mpsc::Sender;
+use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::context::Context;
 use crate::message::Message;
@@ -13,7 +13,7 @@ use crate::session::ISession;
 
 pub struct TcpSession {
     id: u64,
-    pub tx: Sender<Message>,
+    pub tx: Sender<Vec<u8>>,
 }
 
 impl TcpSession {
@@ -31,8 +31,11 @@ impl ISession for TcpSession {
         self.id
     }
 
-    async fn send(&mut self, msg_id: u32, body: Vec<u8>) -> Result<(), Error> {
-        self.tx.send(&body).await
+    async fn send<T>(&mut self, msg_id: u32, body: &T) -> Result<(), Error> {
+        let json_data = serde_json::to_vec(body)?;
+        let bytes: [u8; 4] = msg_id.to_le_bytes();
+        self.tx.send(json_data).await?;
+        Ok(())
     }
 
     async fn close(&mut self) {
@@ -75,11 +78,11 @@ impl TcpServer {
         }
     }
 
-    fn handle_sending<'a>(mut write_ch: OwnedWriteHalf) -> Sender<&'a [u8]> {
-        let (tx, mut rx) = mpsc::channel(5);
+    fn handle_sending<'a>(mut write_ch: OwnedWriteHalf) -> Sender<&'a Vec<u8>> {
+        let (tx:Sender<Vec<u8>>, mut rx:Receiver<Vec<u8>>) = mpsc::channel(5);
         tokio::spawn(async move {
-            while let Some(message) = rx.recv().await {
-                write_ch.write_all(message).await
+            while let Some(data) = rx.recv().await {
+                write_ch.write_all(data).await
             }
         });
 
